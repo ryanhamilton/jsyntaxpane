@@ -20,6 +20,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.ref.WeakReference;
@@ -67,6 +69,36 @@ public class QuickFindDialog extends javax.swing.JDialog
 		initComponents();
 		SwingUtils.addEscapeListener(this);
 		dsd = new WeakReference<DocumentSearchData>(data);
+
+		
+		WindowAdapter closeListener = new WindowAdapter() {
+			public void windowDeactivated(WindowEvent e) {
+				// target.getDocument().removeDocumentListener(QuickFindDialog.this);
+				Markers.removeMarkers(target, QuickFindDialog.this.marker);
+				if (QuickFindDialog.this.escaped) {
+					try {
+						Rectangle aRect = target.modelToView(QuickFindDialog.this.oldCaretPosition);
+						target.setCaretPosition(QuickFindDialog.this.oldCaretPosition);
+						target.scrollRectToVisible(aRect);
+					} catch (BadLocationException var4) {
+						;
+					}
+				}
+				QuickFindDialog.this.dispose();
+			}
+		};
+		this.addWindowListener(closeListener);
+		this.jTxtFind.getDocument().addDocumentListener(this);
+		this.jTxtFind.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					dsd.get().doFindNext(target);
+				} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+					QuickFindDialog.this.setVisible(false);
+				}
+			}
+		});
 	}
 
 	public void showFor(final JTextComponent target) {
@@ -81,30 +113,12 @@ public class QuickFindDialog extends javax.swing.JDialog
 		setLocation(loc);
 		jTxtFind.setFont(target.getFont());
 		jTxtFind.getDocument().addDocumentListener(this);
-		WindowAdapter closeListener = new WindowAdapter() {
-
-			@Override
-			public void windowDeactivated(WindowEvent e) {
-				target.getDocument().removeDocumentListener(QuickFindDialog.this);
-				Markers.removeMarkers(target, marker);
-				if (escaped) {
-					Rectangle aRect;
-					try {
-						aRect = target.modelToView(oldCaretPosition);
-						target.setCaretPosition(oldCaretPosition);
-						target.scrollRectToVisible(aRect);
-					} catch (BadLocationException ex) {
-					}
-				}
-				dispose();
-			}
-		};
-		addWindowListener(closeListener);
 		this.target = new WeakReference<JTextComponent>(target);
 		Pattern p = dsd.get().getPattern();
 		if (p != null) {
 			jTxtFind.setText(p.pattern());
 		}
+		jTxtFind.selectAll();
 		jChkWrap.setSelected(dsd.get().isWrap());
 		setVisible(true);
 	}

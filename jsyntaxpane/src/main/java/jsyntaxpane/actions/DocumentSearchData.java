@@ -266,6 +266,10 @@ public class DocumentSearchData {
 		if (quickFindDlg == null) {
 			quickFindDlg = new QuickFindDialog(target, this);
 		}
+		String s = target.getSelectedText();
+		if(s != null && s.length() > 0) {
+			setPattern(s, false, true);
+		}
 		quickFindDlg.showFor(target);
 	}
 }
