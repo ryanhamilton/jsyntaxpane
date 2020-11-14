@@ -4,7 +4,7 @@
 package jsyntaxpane.syntaxkits;
 
 import jsyntaxpane.DefaultSyntaxKit;
-import jsyntaxpane.lexers.SqlLexer;
+import jsyntaxpane.lexers.QSqlLexer;
 
 /**
  * @author Ryan Hamilton
